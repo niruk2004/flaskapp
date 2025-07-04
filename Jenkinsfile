@@ -3,28 +3,21 @@ pipeline {
 stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/username/sample-project.git'
+                git url: '<your-repo-url>', branch: 'main'
             }
         }
-        stage('Build Docker Image') {
+stage('Build Docker Image') {
             steps {
-                script {
-                    dockerImage = docker.build("username/sample-app:latest")
-                }
+                sh 'docker build -t flask-api .'
             }
         }
-        stage('Push Docker Image') {
+stage('Run Docker Container') {
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                        dockerImage.push()
-                    }
-                }
-            }
-        }
-        stage('Deploy to Kubernetes') {
-            steps {
-                kubernetesDeploy configs: 'deployment.yaml', kubeconfigId: 'kubeconfig-id'
+                sh '''
+                docker stop flask-api || true
+                docker rm flask-api || true
+                docker run -d -p 5000:5000 --name flask-api flask-api
+                '''
             }
         }
     }
