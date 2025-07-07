@@ -1,0 +1,26 @@
+pipeline:
+  agent:
+    any: true
+
+  stages:
+    - stage: "Clone Repository"
+      steps:
+        - sh: |
+            git clone https://github.com/niruk2004/flaskapp.git .
+    
+    - stage: "Build Docker Image"
+      steps:
+        - sh: |
+            docker build -t flask-todo .
+
+    - stage: "Run Flask Container"
+      steps:
+        - sh: |
+            docker stop flask-todo || true
+            docker rm flask-todo || true
+            docker run -d -p 5000:5000 --name flask-todo flask-todo
+
+    - stage: "Complete"
+      steps:
+        - sh: |
+            echo "✅ Flask ToDo app deployed successfully!"
