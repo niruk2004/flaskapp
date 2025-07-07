@@ -3,7 +3,7 @@ pipeline {
 stages {
         stage('Clone Repository') {
             steps {
-                git url: 'https://github.com/niruk2004/flaskapp', branch: 'main'
+                checkout scm
             }
         }
 stage('Build Docker Image') {
