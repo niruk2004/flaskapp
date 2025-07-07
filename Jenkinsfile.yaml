@@ -1,11 +1,11 @@
 pipeline:
   agent:
-    any:
+    any
 
   stages:
-    - stage: "Clone Repository"
+    - stage: "Checkout Code"
       steps:
-        - sh 'git clone https://github.com/niruk2004/flaskapp.git .'
+        - checkout: scm
 
     - stage: "Build Docker Image"
       steps:
