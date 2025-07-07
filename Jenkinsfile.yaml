@@ -3,6 +3,10 @@ pipeline:
     any:
 
   stages:
+    - stage: "Clean Workspace"
+      steps:
+        - sh: "rm -rf * .[^.]* || true"
+        
     - stage: "Checkout Code"
       steps:
          - sh "git clone https://github.com/niruk2004/flaskapp.git ."
