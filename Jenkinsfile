@@ -31,7 +31,7 @@ node {
             sh '''
             #in the 172.18.0.3, it is ur ip in the network or the bridge adapter that you are using
                 curl -u "${SONAR_TOKEN}:" \
-                  "http://172.17.0.3:9000/api/measures/component?component=todo-flask-app&metricKeys=bugs,vulnerabilities,code_smells" \
+                  "http://172.17.0.3:9000/api/measures/component?component=flaskapp&metricKeys=bugs,vulnerabilities,code_smells" \
                   -o sonar-report.json
             '''
         }
