@@ -1,52 +1,61 @@
-node {
-    stage('Clean Workspace') {
-        deleteDir() // Deletes all files in the workspace before proceeding
+pipeline {
+    agent any
+
+    environment {
+        SONAR_TOKEN = credentials('sonarqube-token')
+        DOCKER_CREDENTIALS = credentials('niruk2004-dockerhub')
+        IMAGE_NAME = "niruk2004/flask-api:latest"
     }
 
-    stage('Clone Repository') {
-        checkout scm
-    }
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                deleteDir()
+            }
+        }
 
-    stage('Build Docker Image') {
-        sh 'docker build -t flask-api .'
-    }
+        stage('Clone Repository') {
+            steps {
+                checkout scm
+            }
+        }
 
-    stage('SonarQube Analysis') {
-        withSonarQubeEnv('MySonarQubeServer') {
-            withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('MySonarQubeServer') {
+                    sh '''
+                        curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+                        unzip -o -q sonar-scanner.zip
+                        ./sonar-scanner-*/bin/sonar-scanner -Dsonar.login=${SONAR_TOKEN}
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t ${IMAGE_NAME} .'
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
                 sh '''
-                    # Download and unzip sonar-scanner
-                    curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-                    unzip -o -q sonar-scanner.zip
-
-                    # Run Sonar analysis
-                    ./sonar-scanner-*/bin/sonar-scanner -Dsonar.login=${SONAR_TOKEN}
+                    docker stop flask-api || true
+                    docker rm flask-api || true
+                    docker run -d -p 5000:5000 --name flask-api ${IMAGE_NAME}
                 '''
             }
         }
-    }
 
-    stage('Download Sonar Report') {
-        withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-            sh '''
-            #in the 172.18.0.3, it is ur ip in the network or the bridge adapter that you are using
-                curl -u "${SONAR_TOKEN}:" \
-                  "http://172.17.0.3:9000/api/measures/component?component=flaskapp&metricKeys=bugs,vulnerabilities,code_smells" \
-                  -o sonar-report.json
-            '''
+        stage('Push to DockerHub') {
+            steps {
+                sh '''
+                    echo "${DOCKER_CREDENTIALS_PSW}" | docker login -u "${DOCKER_CREDENTIALS_USR}" --password-stdin
+                    docker push ${IMAGE_NAME}
+                    docker logout
+                '''
+            }
         }
-    }
-
-    stage('Run Docker Container') {
-        sh '''
-        docker stop flask-api || true
-        docker rm flask-api || true
-        docker run -d -p 5000:5000 --name flask-api flask-api
-        '''
-    }
-
-    // Post actions: Archive report
-     stage('Archive Sonar Report') {
-        archiveArtifacts artifacts: 'sonar-report.json', fingerprint: true
     }
 }
