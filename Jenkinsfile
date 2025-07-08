@@ -4,6 +4,12 @@ pipeline {
         SONAR_TOKEN = credentials('sonarqube-token')
     }
     stages {
+        stage('Clean Workspace') {
+            steps {
+                deleteDir() // Deletes all files in the workspace before proceeding
+            }
+        }
+
         stage('Clone Repository') {
             steps {
                 checkout scm
