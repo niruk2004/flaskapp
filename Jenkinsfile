@@ -46,9 +46,7 @@ node {
     }
 
     // Post actions: Archive report
-    post {
-        always {
-            archiveArtifacts artifacts: 'sonar-report.json', fingerprint: true
-        }
+     stage('Archive Sonar Report') {
+        archiveArtifacts artifacts: 'sonar-report.json', fingerprint: true
     }
 }
