@@ -4,6 +4,12 @@ pipeline {
         SONAR_TOKEN = credentials('sonarqube-token')
     }
     stages {
+        stage('Clean Workspace') {
+            steps {
+                deleteDir() // Deletes all files in the workspace before proceeding
+            }
+        }
+
         stage('Clone Repository') {
             steps {
                 checkout scm
@@ -13,14 +19,12 @@ pipeline {
             steps {
                 withSonarQubeEnv('MySonarQubeServer') {
                     sh '''
-                        # Optional: Download sonar-scanner if not available
-                        if ! [ -x "$(command -v sonar-scanner)" ]; then
-                          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-                          unzip sonar-scanner.zip
-                          export PATH=$PATH:$(pwd)/sonar-scanner-*/bin
-                        fi
+                        # Download and unzip sonar-scanner
+                        curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+                        unzip -o -q sonar-scanner.zip
 
-                        sonar-scanner -Dsonar.login=${SONAR_TOKEN}
+                        # Set path to sonar-scanner binary using absolute path
+                        ./sonar-scanner-*/bin/sonar-scanner -Dsonar.login=${SONAR_TOKEN}
                     '''
                 }
             }
