@@ -15,7 +15,7 @@ pipeline {
                     sh '''
                         # Download and unzip sonar-scanner
                         curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-                        unzip -q sonar-scanner.zip
+                        unzip -o -q sonar-scanner.zip
 
                         # Set path to sonar-scanner binary using absolute path
                         ./sonar-scanner-*/bin/sonar-scanner -Dsonar.login=${SONAR_TOKEN}
